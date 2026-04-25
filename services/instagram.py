@@ -1,9 +1,9 @@
 import logging
-import time
+from contextlib import suppress
 from pathlib import Path
-from typing import Any
 
 from instagrapi import Client
+from instagrapi.types import StoryMedia
 from runtime_lock import FileLock
 
 
@@ -85,41 +85,30 @@ class InstagramPublisher:
             return str(media.pk)
 
     def share_feed_post_to_story(self, media_pk_or_id: str) -> str:
-        media_id = self.client.media_id(media_pk_or_id)
-        media_pk = self.client.media_pk(media_id)
-        now_ts = int(time.time())
-        payload = self.client.with_default_data(
-            {
-                "source_media_id": media_id,
-                "audience": "default",
-                "tray_session_id": self.client.generate_uuid(),
-                "camera_session_id": self.client.generate_uuid(),
-                "story_media_creation_date": now_ts,
-                "client_shared_at": now_ts,
-                "container_module": "feed_timeline",
-            }
+        """
+        Re-share a feed post to stories using feed_media sticker flow.
+        The direct /share_to_story endpoint is not available for all accounts.
+        """
+        media_pk = self.client.media_pk(str(media_pk_or_id))
+        owner = self.client.media_user(media_pk)
+        tmp_story_bg = self.client.photo_download(media_pk, folder=Path.cwd())
+        sticker = StoryMedia(
+            media_pk=int(media_pk),
+            user_id=int(owner.pk),
         )
         with FileLock(
             self.global_lock_path,
             timeout_seconds=self.global_lock_timeout_seconds,
         ):
-            result = self.client.private_request(
-                f"media/{media_pk}/share_to_story/",
-                data=payload,
-                with_signature=False,
+            story = self.client.photo_upload_to_story(
+                path=tmp_story_bg,
+                medias=[sticker],
             )
-        return self._extract_story_pk(result)
+        with suppress(Exception):
+            Path(tmp_story_bg).unlink(missing_ok=True)
+        return str(story.pk)
 
     def _feed_extra_data(self) -> dict[str, str]:
         if self.share_to_facebook:
-            return {"share_to_facebook": "1"}
+            return {"share_to_facebook": 1}
         return {}
-
-    def _extract_story_pk(self, result: dict[str, Any]) -> str:
-        for key in ("story_media", "media"):
-            node = result.get(key)
-            if isinstance(node, dict):
-                pk = node.get("pk")
-                if pk:
-                    return str(pk)
-        raise RuntimeError(f"Unexpected share_to_story response: {result}")
