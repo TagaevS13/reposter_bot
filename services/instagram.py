@@ -30,13 +30,17 @@ class InstagramPublisher:
         self.global_lock_timeout_seconds = max(1, int(global_lock_timeout_seconds))
         self.client = Client()
         self.client.request_timeout = 30
+        self._is_authenticated = False
 
     def _login_for_publish(self, verification_code: str) -> None:
+        if self._is_authenticated:
+            return
         code = (verification_code or self.verification_code or "").strip()
         if not code:
             raise RuntimeError("Instagram 2FA code is required for publishing.")
 
-        # Force explicit login each publish so 2FA code is requested every time.
+        # Create a fresh client once per process start. After successful login we
+        # keep this authenticated session in memory and reuse it for next publishes.
         self.client = Client()
         self.client.request_timeout = 30
         logger.info("Instagram auth start for user=%s", self.username)
@@ -54,6 +58,7 @@ class InstagramPublisher:
 
         self.client.dump_settings(str(self.session_path))
         logger.info("Instagram session dumped to %s", self.session_path)
+        self._is_authenticated = True
 
     def publish(self, file_path: str, media_type: str, caption: str, verification_code: str) -> str:
         with FileLock(
