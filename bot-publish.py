@@ -336,9 +336,23 @@ async def publish_from_state(message: Message, state: FSMContext, bot: Bot) -> N
                     )
                     logger.info("Published to Instagram feed media_pk=%s", ig_media_pk)
                     try:
+                        story_bg_path = temp_file
+                        if media_type == "video":
+                            thumbnail_candidate = f"{temp_file}.jpg"
+                            if os.path.exists(thumbnail_candidate):
+                                story_bg_path = thumbnail_candidate
+                            else:
+                                logger.warning(
+                                    "Video thumbnail for story repost not found, using generated fallback image is unavailable: %s",
+                                    thumbnail_candidate,
+                                )
+                                story_bg_path = ""
+                        if not story_bg_path or not os.path.exists(story_bg_path):
+                            raise RuntimeError("Story repost background file is missing.")
                         story_pk = await asyncio.to_thread(
                             instagram.share_feed_post_to_story,
                             ig_media_pk,
+                            story_bg_path,
                         )
                         logger.info("Shared Instagram feed post to story story_pk=%s", story_pk)
                     except Exception:
@@ -385,6 +399,10 @@ async def publish_from_state(message: Message, state: FSMContext, bot: Bot) -> N
     finally:
         if temp_file and os.path.exists(temp_file):
             os.remove(temp_file)
+        if temp_file:
+            temp_thumb = f"{temp_file}.jpg"
+            if os.path.exists(temp_thumb):
+                os.remove(temp_thumb)
 
 
 async def download_to_temp(bot: Bot, file_id: str, extension: str) -> str:

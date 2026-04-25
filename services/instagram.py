@@ -1,5 +1,4 @@
 import logging
-from contextlib import suppress
 from pathlib import Path
 
 from instagrapi import Client
@@ -84,28 +83,25 @@ class InstagramPublisher:
             logger.info("Instagram video upload completed")
             return str(media.pk)
 
-    def share_feed_post_to_story(self, media_pk_or_id: str) -> str:
+    def share_feed_post_to_story(self, media_pk_or_id: str, background_path: str) -> str:
         """
         Re-share a feed post to stories using feed_media sticker flow.
         The direct /share_to_story endpoint is not available for all accounts.
         """
         media_pk = self.client.media_pk(str(media_pk_or_id))
-        owner = self.client.media_user(media_pk)
-        tmp_story_bg = self.client.photo_download(media_pk, folder=Path.cwd())
+        media_info = self.client.media_info_v1(media_pk)
         sticker = StoryMedia(
             media_pk=int(media_pk),
-            user_id=int(owner.pk),
+            user_id=int(media_info.user.pk),
         )
         with FileLock(
             self.global_lock_path,
             timeout_seconds=self.global_lock_timeout_seconds,
         ):
             story = self.client.photo_upload_to_story(
-                path=tmp_story_bg,
+                path=background_path,
                 medias=[sticker],
             )
-        with suppress(Exception):
-            Path(tmp_story_bg).unlink(missing_ok=True)
         return str(story.pk)
 
     def _feed_extra_data(self) -> dict[str, str]:
