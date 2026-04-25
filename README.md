@@ -29,6 +29,7 @@
 - `INSTAGRAM_PASSWORD` — пароль Instagram аккаунта
 - `INSTAGRAM_VERIFICATION_CODE` — код 2FA (если Instagram его запросил при первом входе)
 - `INSTAGRAM_SESSION_PATH` — путь к файлу сессии Instagram (по умолчанию `.instagram_session.json`)
+- `INSTAGRAM_SHARE_TO_FACEBOOK` — пробовать кросспост feed-поста из IG в Facebook (`1`/`0`)
 - `TIKTOK_CLIENT_KEY` — TikTok app client key
 - `TIKTOK_CLIENT_SECRET` — TikTok app client secret
 - `TIKTOK_ACCESS_TOKEN` — access token для Content Posting API
@@ -81,6 +82,7 @@ python tiktok_oauth_helper.py
 - Для TikTok бот публикует только видео.
 - Для Instagram используются логин/пароль аккаунта.
 - При каждой публикации в Instagram бот запрашивает 2FA-код в чате Telegram.
+- После публикации в IG-ленту бот автоматически делает репост этой публикации в сторис.
 - Бот должен быть админом в вашем Telegram-канале с правом отправки сообщений.
 - Логи выполнения сохраняются в `logs/bot-publish.log`.
 - Для приватного использования заполните `ALLOWED_USER_IDS`, чтобы бот принимал команды только от ваших аккаунтов.

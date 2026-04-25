@@ -61,6 +61,7 @@ instagram = InstagramPublisher(
     password=settings.instagram_password,
     verification_code=settings.instagram_verification_code,
     session_path=settings.instagram_session_path,
+    share_to_facebook=settings.instagram_share_to_facebook,
     global_lock_path=settings.instagram_global_lock_file,
     global_lock_timeout_seconds=settings.instagram_global_lock_timeout_seconds,
 )
@@ -326,13 +327,22 @@ async def publish_from_state(message: Message, state: FSMContext, bot: Bot) -> N
             if settings.instagram_username and settings.instagram_password:
                 try:
                     logger.info("Publishing to Instagram account=%s", settings.instagram_username)
-                    await asyncio.to_thread(
+                    ig_media_pk = await asyncio.to_thread(
                         instagram.publish,
                         temp_file,
                         media_type,
                         caption,
                         instagram_2fa_code,
                     )
+                    logger.info("Published to Instagram feed media_pk=%s", ig_media_pk)
+                    try:
+                        story_pk = await asyncio.to_thread(
+                            instagram.share_feed_post_to_story,
+                            ig_media_pk,
+                        )
+                        logger.info("Shared Instagram feed post to story story_pk=%s", story_pk)
+                    except Exception:
+                        logger.exception("Instagram feed published, but story repost failed")
                     ig_published = True
                     logger.info("Published to Instagram successfully")
                 except Exception as exc:

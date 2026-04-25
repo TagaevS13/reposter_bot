@@ -15,6 +15,7 @@ class Settings:
     instagram_password: str
     instagram_verification_code: str
     instagram_session_path: str
+    instagram_share_to_facebook: bool
     tiktok_client_key: str
     tiktok_client_secret: str
     tiktok_access_token: str
@@ -57,6 +58,13 @@ def _parse_allowed_usernames(raw: str) -> list[str]:
     return result
 
 
+def _as_bool(raw: str | None, default: bool = False) -> bool:
+    value = (raw or "").strip().lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
+
+
 def load_settings() -> Settings:
     return Settings(
         telegram_bot_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
@@ -65,6 +73,10 @@ def load_settings() -> Settings:
         instagram_password=os.getenv("INSTAGRAM_PASSWORD", ""),
         instagram_verification_code=os.getenv("INSTAGRAM_VERIFICATION_CODE", ""),
         instagram_session_path=os.getenv("INSTAGRAM_SESSION_PATH", ".instagram_session.json"),
+        instagram_share_to_facebook=_as_bool(
+            os.getenv("INSTAGRAM_SHARE_TO_FACEBOOK"),
+            True,
+        ),
         tiktok_client_key=os.getenv("TIKTOK_CLIENT_KEY", ""),
         tiktok_client_secret=os.getenv("TIKTOK_CLIENT_SECRET", ""),
         tiktok_access_token=os.getenv("TIKTOK_ACCESS_TOKEN", ""),
