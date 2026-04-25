@@ -30,6 +30,9 @@
 - `INSTAGRAM_VERIFICATION_CODE` — код 2FA (если Instagram его запросил при первом входе)
 - `INSTAGRAM_SESSION_PATH` — путь к файлу сессии Instagram (по умолчанию `.instagram_session.json`)
 - `INSTAGRAM_SHARE_TO_FACEBOOK` — пробовать кросспост feed-поста из IG в Facebook (`1`/`0`)
+- `INSTAGRAM_FB_DESTINATION_TYPE` — (опционально) явный тип FB назначения (`USER`/`PAGE`)
+- `INSTAGRAM_FB_DESTINATION_ID` — (опционально) ID профиля/страницы в Facebook для кросспоста
+- `INSTAGRAM_FB_ACCESS_TOKEN` — (опционально) FB access token, если Meta требует явную передачу
 - `TIKTOK_CLIENT_KEY` — TikTok app client key
 - `TIKTOK_CLIENT_SECRET` — TikTok app client secret
 - `TIKTOK_ACCESS_TOKEN` — access token для Content Posting API

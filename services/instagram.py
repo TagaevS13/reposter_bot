@@ -17,6 +17,9 @@ class InstagramPublisher:
         verification_code: str = "",
         session_path: str = ".instagram_session.json",
         share_to_facebook: bool = True,
+        fb_destination_type: str = "",
+        fb_destination_id: str = "",
+        fb_access_token: str = "",
         global_lock_path: str = "C:/Users/ADMIN/.runtime/instagram-publish.lock",
         global_lock_timeout_seconds: int = 300,
     ) -> None:
@@ -25,6 +28,9 @@ class InstagramPublisher:
         self.verification_code = verification_code
         self.session_path = Path(session_path)
         self.share_to_facebook = share_to_facebook
+        self.fb_destination_type = fb_destination_type.strip()
+        self.fb_destination_id = fb_destination_id.strip()
+        self.fb_access_token = fb_access_token.strip()
         self.global_lock_path = global_lock_path
         self.global_lock_timeout_seconds = max(1, int(global_lock_timeout_seconds))
         self.client = Client()
@@ -73,6 +79,7 @@ class InstagramPublisher:
                     extra_data=self._feed_extra_data(),
                 )
                 logger.info("Instagram photo upload completed")
+                self._log_fb_crosspost_diagnostics()
                 return str(media.pk)
             logger.info("Instagram video upload started path=%s", file_path)
             media = self.client.video_upload(
@@ -81,6 +88,7 @@ class InstagramPublisher:
                 extra_data=self._feed_extra_data(),
             )
             logger.info("Instagram video upload completed")
+            self._log_fb_crosspost_diagnostics()
             return str(media.pk)
 
     def share_feed_post_to_story(self, media_pk_or_id: str, background_path: str) -> str:
@@ -105,6 +113,26 @@ class InstagramPublisher:
         return str(story.pk)
 
     def _feed_extra_data(self) -> dict[str, str]:
+        extra_data: dict[str, str] = {}
         if self.share_to_facebook:
-            return {"share_to_facebook": 1}
-        return {}
+            extra_data["share_to_facebook"] = "1"
+        if self.fb_destination_type:
+            extra_data["share_to_fb_destination_type"] = self.fb_destination_type
+        if self.fb_destination_id:
+            extra_data["share_to_fb_destination_id"] = self.fb_destination_id
+        if self.fb_access_token:
+            extra_data["fb_access_token"] = self.fb_access_token
+        return extra_data
+
+    def _log_fb_crosspost_diagnostics(self) -> None:
+        payload = self.client.last_json if isinstance(self.client.last_json, dict) else {}
+        media = payload.get("media", {}) if isinstance(payload, dict) else {}
+        if isinstance(media, dict):
+            friction = media.get("sharing_friction_info")
+            xpost = media.get("xpost_dryrun")
+            if friction or xpost:
+                logger.info(
+                    "FB crosspost diagnostics friction=%s xpost=%s",
+                    friction,
+                    xpost,
+                )

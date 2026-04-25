@@ -62,6 +62,9 @@ instagram = InstagramPublisher(
     verification_code=settings.instagram_verification_code,
     session_path=settings.instagram_session_path,
     share_to_facebook=settings.instagram_share_to_facebook,
+    fb_destination_type=settings.instagram_fb_destination_type,
+    fb_destination_id=settings.instagram_fb_destination_id,
+    fb_access_token=settings.instagram_fb_access_token,
     global_lock_path=settings.instagram_global_lock_file,
     global_lock_timeout_seconds=settings.instagram_global_lock_timeout_seconds,
 )

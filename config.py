@@ -16,6 +16,9 @@ class Settings:
     instagram_verification_code: str
     instagram_session_path: str
     instagram_share_to_facebook: bool
+    instagram_fb_destination_type: str
+    instagram_fb_destination_id: str
+    instagram_fb_access_token: str
     tiktok_client_key: str
     tiktok_client_secret: str
     tiktok_access_token: str
@@ -77,6 +80,18 @@ def load_settings() -> Settings:
             os.getenv("INSTAGRAM_SHARE_TO_FACEBOOK"),
             True,
         ),
+        instagram_fb_destination_type=os.getenv(
+            "INSTAGRAM_FB_DESTINATION_TYPE",
+            "",
+        ).strip(),
+        instagram_fb_destination_id=os.getenv(
+            "INSTAGRAM_FB_DESTINATION_ID",
+            "",
+        ).strip(),
+        instagram_fb_access_token=os.getenv(
+            "INSTAGRAM_FB_ACCESS_TOKEN",
+            "",
+        ).strip(),
         tiktok_client_key=os.getenv("TIKTOK_CLIENT_KEY", ""),
         tiktok_client_secret=os.getenv("TIKTOK_CLIENT_SECRET", ""),
         tiktok_access_token=os.getenv("TIKTOK_ACCESS_TOKEN", ""),
